@@ -75,8 +75,22 @@ export function Menu() {
     fetchMenu();
   }, []);
 
-  const handleSuggestionSubmit = () => {
-    if (!suggestionText.trim()) return;
+  const handleSuggestionSubmit = async () => {
+    if (!suggestionText.trim() || !user) return;
+
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        await supabase.from("suggestions").insert({
+          user_id: authUser.id,
+          username: user.name,
+          suggestion: suggestionText.trim()
+        });
+      }
+    } catch (err) {
+      console.error("Error al guardar la sugerencia:", err);
+    }
+
     setIsSubmitted(true);
     setTimeout(() => {
       setIsSuggestionOpen(false);

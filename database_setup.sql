@@ -163,3 +163,28 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 6. Tabla de Sugerencias de Usuarios
+CREATE TABLE IF NOT EXISTS suggestions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  username TEXT NOT NULL,
+  suggestion TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Habilitar RLS para Sugerencias
+ALTER TABLE suggestions ENABLE ROW LEVEL SECURITY;
+
+-- Políticas de Seguridad para Sugerencias
+CREATE POLICY "Permitir inserción de sugerencias a usuarios autenticados" ON suggestions 
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Permitir lectura de sugerencias a administradores" ON suggestions 
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
+    )
+  );
+
