@@ -402,22 +402,17 @@ export function Layout() {
                 <Phone className="w-4 h-4 text-[#E60000]" strokeWidth={2.5} />
                 <span className="text-xs sm:text-sm font-black tracking-widest">+591 69209742</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="bg-white/95 backdrop-blur-md shadow-md rounded-full px-3 sm:px-4 py-2 flex items-center gap-2 text-gray-800 cursor-pointer">
-                  <MapPin className="w-4 h-4 text-[#E60000]" strokeWidth={2.5} />
-                  <span className="text-xs sm:text-sm font-black tracking-widest hidden sm:inline">AV. Bush 123</span>
-                </div>
-                {user && (
-                  <button 
-                    onClick={() => setIsProfileOpen(true)}
-                    className="bg-white/95 backdrop-blur-md shadow-md rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-[#E60000] hover:scale-105 transition-transform"
-                  >
-                    <User className="w-5 h-5" strokeWidth={2.5} />
-                  </button>
-                )}
-              </div>
+              {user && (
+                <button 
+                  onClick={() => setIsProfileOpen(true)}
+                  className="bg-white/95 backdrop-blur-md shadow-md rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-[#E60000] hover:scale-105 transition-transform"
+                >
+                  <User className="w-5 h-5" strokeWidth={2.5} />
+                </button>
+              )}
             </div>
           )}
+
           <div className="bg-[#FF0000] h-16 relative flex justify-center border-b-[6px] border-[#F4B41A] shadow-md">
             <div className="absolute -bottom-10 w-28 h-28 bg-white rounded-full p-1.5 shadow-[0_10px_30px_rgba(230,0,0,0.4)] ring-[4px] ring-[#F4B41A] z-20 flex items-center justify-center overflow-visible">
               <div className="absolute inset-0 rounded-full bg-[#E60000] blur-md opacity-20" />

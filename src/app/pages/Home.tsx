@@ -29,11 +29,6 @@ export function Home() {
           <span className="text-sm font-black tracking-widest">+591 69209742</span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="bg-white/95 backdrop-blur-md shadow-[0_4px_10px_rgba(0,0,0,0.1)] rounded-full px-5 py-2.5 border border-white/50 flex items-center gap-3 text-gray-800 hover:scale-105 transition-transform cursor-pointer">
-            <MapPin className="w-5 h-5 text-[#E60000]" strokeWidth={2.5} />
-            <span className="text-sm font-black tracking-widest hidden sm:inline">AV. Bush 123</span>
-            <span className="text-sm font-black tracking-widest sm:hidden">Bush 123</span>
-          </div>
           {user && (
             <button 
               onClick={() => openProfile()}
