@@ -84,6 +84,20 @@ export function Auth() {
     setIsLoading(true);
     setRegisterErrors({});
 
+    // Verificar si el nombre de usuario ya existe en la base de datos
+    const { data: existingUser } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("username", registerData.username.trim())
+      .maybeSingle();
+
+    if (existingUser) {
+      setIsLoading(false);
+      setRegisterErrors({ username: "Este nombre de usuario ya está en uso. Elige otro." });
+      setRegisterTouched({ username: true, email: false, phone: false, password: false });
+      return;
+    }
+
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email: registerData.email,
       password: registerData.password,
@@ -97,8 +111,12 @@ export function Auth() {
     setIsLoading(false);
 
     if (error) {
-      if (error.message.toLowerCase().includes("already")) {
-        setRegisterErrors({ email: "Este correo ya está registrado por otra cuenta." });
+      if (
+        error.message.toLowerCase().includes("already") ||
+        error.message.toLowerCase().includes("already registered") ||
+        error.message.toLowerCase().includes("email")
+      ) {
+        setRegisterErrors({ email: "Este correo electrónico ya está registrado. Intenta iniciar sesión." });
       } else {
         setRegisterErrors({ password: `Error al registrarse: ${error.message}` });
       }
