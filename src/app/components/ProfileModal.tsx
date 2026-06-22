@@ -29,7 +29,7 @@ export function ProfileModal({
   const [activeTab, setActiveTab] = useState<"perfil" | "historial" | "descuentos">("perfil");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editData, setEditData] = useState<UserProfile>(user || { name: "", email: "", phone: "" });
-  const [editErrors, setEditErrors] = useState<{ name?: string; email?: string; phone?: string }>({});
+  const [editErrors, setEditErrors] = useState<{ name?: string; email?: string; phone?: string; general?: string }>({});
   const [promoCode, setPromoCode] = useState("");
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [discountFeedback, setDiscountFeedback] = useState<DiscountFeedback>(null);
@@ -85,16 +85,15 @@ export function ProfileModal({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Validar solo nombre y teléfono (el correo no es editable)
-    const nameErr = validateEditField("name", editData.name || "");
+    // Validar solo teléfono (nombre y correo no son editables)
     const phoneErr = validateEditField("phone", editData.phone || "");
-    setEditErrors({ name: nameErr, phone: phoneErr });
-    if (nameErr || phoneErr) return;
+    setEditErrors({ phone: phoneErr });
+    if (phoneErr) return;
 
-    // Llamar a updateUser y verificar si el nombre ya está en uso
+    // Llamar a updateUser 
     const result = await updateUser(editData);
     if (!result.success) {
-      setEditErrors((prev) => ({ ...prev, name: result.message }));
+      setEditErrors((prev) => ({ ...prev, general: result.message }));
       return;
     }
     setIsEditingProfile(false);
@@ -310,26 +309,24 @@ export function ProfileModal({
               ) : (
                 <form onSubmit={handleSave} className="flex flex-col gap-5 animate-in slide-in-from-right-4 duration-300">
 
-                  {/* Nombre */}
+                  {/* Nombre — solo lectura, no editable */}
                   <div>
-                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2 block">Nombre completo</label>
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                      Nombre completo
+                      <span className="text-[10px] font-black text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded uppercase tracking-wider">No editable</span>
+                    </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <User className="h-5 w-5 text-gray-400" />
+                        <User className="h-5 w-5 text-gray-300" />
                       </div>
                       <input
                         type="text"
-                        autoComplete="off"
+                        readOnly
+                        disabled
                         value={editData.name || ""}
-                        onChange={(e) => handleEditChange("name", e.target.value)}
-                        className={`w-full bg-white border text-gray-900 rounded-2xl pl-11 pr-4 py-3.5 focus:ring-2 focus:ring-[#E60000] focus:border-transparent outline-none transition-all font-medium shadow-sm text-sm ${
-                          editErrors.name ? "border-red-400" : "border-gray-200"
-                        }`}
+                        className="w-full bg-gray-50 border border-gray-200 text-gray-400 rounded-2xl pl-11 pr-4 py-3.5 outline-none font-medium text-sm cursor-not-allowed select-none"
                       />
                     </div>
-                    {editErrors.name && (
-                      <p className="text-xs text-red-500 font-semibold mt-1.5 pl-1">{editErrors.name}</p>
-                    )}
                   </div>
 
                   {/* Correo — solo lectura, no editable */}

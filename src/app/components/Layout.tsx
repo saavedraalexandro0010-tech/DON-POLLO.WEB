@@ -312,26 +312,13 @@ export function Layout() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return { success: false, message: "No hay sesión activa." };
 
-    // Verificar si el nuevo nombre ya está en uso por OTRO usuario
-    const { data: existing } = await supabase
-      .from("profiles")
-      .select("id")
-      .ilike("username", userData.name.trim())
-      .neq("id", session.user.id)
-      .maybeSingle();
-
-    if (existing) {
-      return { success: false, message: "Este nombre ya está en uso por otro usuario. Elige otro." };
-    }
-
     // Actualizar localmente
     updateLocalUser(userData);
 
-    // Actualizar tabla profiles
+    // Actualizar tabla profiles (el nombre ya no se actualiza porque es permanente)
     const { error: profileErr } = await supabase
       .from("profiles")
       .update({
-        username: userData.name.trim(),
         phone: userData.phone
       })
       .eq("id", session.user.id);
