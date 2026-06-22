@@ -85,12 +85,11 @@ export function ProfileModal({
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    // Validar todos los campos antes de guardar
+    // Validar solo nombre y teléfono (el correo no es editable)
     const nameErr = validateEditField("name", editData.name || "");
-    const emailErr = validateEditField("email", editData.email || "");
     const phoneErr = validateEditField("phone", editData.phone || "");
-    setEditErrors({ name: nameErr, email: emailErr, phone: phoneErr });
-    if (nameErr || emailErr || phoneErr) return;
+    setEditErrors({ name: nameErr, phone: phoneErr });
+    if (nameErr || phoneErr) return;
     updateUser(editData);
     setIsEditingProfile(false);
   };
@@ -327,26 +326,24 @@ export function ProfileModal({
                     )}
                   </div>
 
-                  {/* Correo */}
+                  {/* Correo — solo lectura, no editable */}
                   <div>
-                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2 block">Correo electrónico</label>
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 block flex items-center gap-1.5">
+                      Correo electrónico
+                      <span className="text-[10px] font-black text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded uppercase tracking-wider">No editable</span>
+                    </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Mail className="h-5 w-5 text-gray-400" />
+                        <Mail className="h-5 w-5 text-gray-300" />
                       </div>
                       <input
                         type="text"
-                        autoComplete="off"
+                        readOnly
+                        disabled
                         value={editData.email || ""}
-                        onChange={(e) => handleEditChange("email", e.target.value)}
-                        className={`w-full bg-white border text-gray-900 rounded-2xl pl-11 pr-4 py-3.5 focus:ring-2 focus:ring-[#E60000] focus:border-transparent outline-none transition-all font-medium shadow-sm text-sm ${
-                          editErrors.email ? "border-red-400" : "border-gray-200"
-                        }`}
+                        className="w-full bg-gray-50 border border-gray-200 text-gray-400 rounded-2xl pl-11 pr-4 py-3.5 outline-none font-medium text-sm cursor-not-allowed select-none"
                       />
                     </div>
-                    {editErrors.email && (
-                      <p className="text-xs text-red-500 font-semibold mt-1.5 pl-1">{editErrors.email}</p>
-                    )}
                   </div>
 
                   {/* Teléfono */}
