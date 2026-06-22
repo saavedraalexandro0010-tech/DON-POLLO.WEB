@@ -152,22 +152,40 @@ export function Auth() {
       password: loginData.password,
     });
 
-    setIsLoading(false);
-
     if (error) {
+      setIsLoading(false);
       setLoginErrors({ general: "Credenciales incorrectas o usuario no registrado. Regístrate primero." });
       return;
     }
 
     if (data?.user) {
-      const username = data.user.user_metadata?.username || loginData.username || "Usuario";
-      const phone = data.user.user_metadata?.phone || "";
+      // Obtener el perfil real de la base de datos
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username, phone")
+        .eq("id", data.user.id)
+        .single();
+      
+      const realUsername = profile?.username || data.user.user_metadata?.username || "Usuario";
+      
+      // Validar que el nombre ingresado coincida con el real
+      if (realUsername.trim().toLowerCase() !== loginData.username.trim().toLowerCase()) {
+        await supabase.auth.signOut(); // Desloguear porque falló la validación del nombre
+        setIsLoading(false);
+        setLoginErrors({ username: "El nombre no coincide con el registrado en esta cuenta." });
+        return;
+      }
+
+      const phone = profile?.phone || data.user.user_metadata?.phone || "";
       login({
-        name: username,
+        name: realUsername,
         email: data.user.email || "",
         phone: phone,
       });
+      setIsLoading(false);
       navigate("/menu");
+    } else {
+      setIsLoading(false);
     }
   };
 
