@@ -167,6 +167,7 @@ export function ProfileModal({
     };
 
     addRow("Fecha:", fecha);
+    addRow("Cliente:", user?.name || "Consumidor Final");
     addRow("Nro. Orden:", order.id.slice(0, 16) + "...");
     addRow("Entrega:", order.deliveryMethod);
     addRow("Pago:", order.paymentMethod);
@@ -439,6 +440,10 @@ export function ProfileModal({
                             <div className="flex justify-between">
                               <span className="text-gray-500">Fecha:</span>
                               <span className="font-bold text-gray-900 text-right text-xs">{new Date(order.timestamp).toLocaleDateString("es-BO", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Cliente:</span>
+                              <span className="font-bold text-gray-900 text-xs text-right max-w-[60%] break-all">{user?.name || "Consumidor Final"}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-gray-500">Nro. Orden:</span>
