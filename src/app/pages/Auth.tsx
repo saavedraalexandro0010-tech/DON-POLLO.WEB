@@ -430,10 +430,12 @@ export function Auth() {
                       <input
                         type="tel"
                         autoComplete="off"
+                        inputMode="numeric"
                         value={registerData.phone}
                         onChange={(e) => {
-                          setRegisterData({ ...registerData, phone: e.target.value });
-                          if (registerTouched.phone) setRegisterErrors(validateRegister({ ...registerData, phone: e.target.value }));
+                          const onlyDigits = e.target.value.replace(/\D/g, "");
+                          setRegisterData({ ...registerData, phone: onlyDigits });
+                          if (registerTouched.phone) setRegisterErrors(validateRegister({ ...registerData, phone: onlyDigits }));
                         }}
                         onBlur={() => handleRegisterBlur("phone")}
                         placeholder="Teléfono (Opcional)"

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { jsPDF } from "jspdf";
 import { User, Mail, Phone, Tag, Save, X, History, ChevronRight, ChevronDown, ChevronUp, Edit2, CheckCircle2, AlertCircle, XCircle, Download } from "lucide-react";
 import { UserProfile, AppOrder } from "./Layout";
 
@@ -67,57 +68,106 @@ export function ProfileModal({
     const descuento = order.hasDiscount && order.subtotal
       ? (order.subtotal - order.total).toFixed(2)
       : null;
-    const html = `
-      <!DOCTYPE html>
-      <html lang="es">
-      <head>
-        <meta charset="UTF-8" />
-        <title>Factura Don Pollo - ${order.id.slice(0,8)}</title>
-        <style>
-          @page { size: A5; margin: 20mm; }
-          * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
-          body { background: white; color: #111; font-size: 13px; }
-          .header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 12px; margin-bottom: 12px; }
-          .header h1 { font-size: 22px; font-weight: 900; letter-spacing: 2px; }
-          .header p { font-size: 11px; color: #666; margin-top: 2px; }
-          .row { display: flex; justify-content: space-between; margin: 6px 0; }
-          .label { color: #555; }
-          .value { font-weight: bold; text-align: right; max-width: 60%; word-break: break-all; }
-          .divider { border-top: 1px dashed #bbb; margin: 10px 0; }
-          .divider-solid { border-top: 2px solid #111; margin: 10px 0; }
-          .total-row { font-size: 18px; font-weight: 900; }
-          .discount { color: #dc2626; }
-          .footer { text-align: center; margin-top: 16px; font-size: 11px; color: #777; border-top: 1px dashed #ccc; padding-top: 10px; }
-          .badge { display: inline-block; background: #22c55e; color: white; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 6px; margin-bottom: 4px; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="badge">COMPLETADO</div>
-          <h1>DON POLLO</h1>
-          <p>El Jefe del Sabor</p>
-          <p style="margin-top:6px; font-size:10px;">RECIBO ELECTRÓNICO</p>
-        </div>
-        <div class="row"><span class="label">Fecha:</span><span class="value">${fecha}</span></div>
-        <div class="row"><span class="label">Nro. Orden:</span><span class="value">${order.id}</span></div>
-        <div class="row"><span class="label">Entrega:</span><span class="value">${order.deliveryMethod}</span></div>
-        <div class="row"><span class="label">Pago:</span><span class="value">${order.paymentMethod}</span></div>
-        <div class="divider"></div>
-        <div class="row"><span class="label">${order.itemName}</span><span class="value">Bs ${subtotal}</span></div>
-        ${descuento ? `<div class="row discount"><span>Descuento (-${order.discountPercent}%):</span><span>- Bs ${descuento}</span></div>` : ''}
-        <div class="divider-solid"></div>
-        <div class="row total-row"><span>TOTAL:</span><span>Bs ${order.total.toFixed(2)}</span></div>
-        <div class="footer">¡Gracias por tu compra, Jefe!<br/>Tel: +591 69209742</div>
-      </body>
-      </html>
-    `;
-    const win = window.open('', '_blank', 'width=600,height=800');
-    if (win) {
-      win.document.write(html);
-      win.document.close();
-      win.focus();
-      setTimeout(() => { win.print(); }, 400);
+
+    const doc = new jsPDF({ unit: "mm", format: "a5" });
+    const margin = 15;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const contentWidth = pageWidth - margin * 2;
+    let y = margin;
+
+    // Header
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    doc.text("COMPLETADO", pageWidth / 2, y, { align: "center" });
+    y += 6;
+
+    doc.setFontSize(20);
+    doc.setFont("courier", "bold");
+    doc.setTextColor(20);
+    doc.text("DON POLLO", pageWidth / 2, y, { align: "center" });
+    y += 6;
+
+    doc.setFontSize(9);
+    doc.setFont("courier", "normal");
+    doc.setTextColor(100);
+    doc.text("El Jefe del Sabor", pageWidth / 2, y, { align: "center" });
+    y += 4;
+    doc.text("RECIBO ELECTRÓNICO", pageWidth / 2, y, { align: "center" });
+    y += 6;
+
+    // Dashed line
+    doc.setDrawColor(180);
+    doc.setLineDashPattern([2, 2], 0);
+    doc.line(margin, y, margin + contentWidth, y);
+    y += 6;
+
+    // Details
+    doc.setFontSize(9);
+    doc.setTextColor(80);
+    doc.setFont("courier", "normal");
+    const addRow = (label: string, value: string) => {
+      doc.text(label, margin, y);
+      doc.setFont("courier", "bold");
+      doc.setTextColor(20);
+      doc.text(value, margin + contentWidth, y, { align: "right" });
+      doc.setFont("courier", "normal");
+      doc.setTextColor(80);
+      y += 6;
+    };
+
+    addRow("Fecha:", fecha);
+    addRow("Nro. Orden:", order.id.slice(0, 16) + "...");
+    addRow("Entrega:", order.deliveryMethod);
+    addRow("Pago:", order.paymentMethod);
+    y += 2;
+
+    // Dashed separator
+    doc.setLineDashPattern([2, 2], 0);
+    doc.line(margin, y, margin + contentWidth, y);
+    y += 6;
+
+    // Items
+    addRow(order.itemName, `Bs ${subtotal}`);
+    if (descuento) {
+      doc.setTextColor(220, 38, 38);
+      doc.text(`Descuento (-${order.discountPercent}%):`, margin, y);
+      doc.setFont("courier", "bold");
+      doc.text(`- Bs ${descuento}`, margin + contentWidth, y, { align: "right" });
+      doc.setFont("courier", "normal");
+      doc.setTextColor(80);
+      y += 6;
     }
+    y += 2;
+
+    // Solid line
+    doc.setLineDashPattern([], 0);
+    doc.setDrawColor(20);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, margin + contentWidth, y);
+    y += 6;
+
+    // Total
+    doc.setFontSize(14);
+    doc.setFont("courier", "bold");
+    doc.setTextColor(20);
+    doc.text("TOTAL:", margin, y);
+    doc.text(`Bs ${order.total.toFixed(2)}`, margin + contentWidth, y, { align: "right" });
+    y += 10;
+
+    // Footer
+    doc.setLineDashPattern([2, 2], 0);
+    doc.setDrawColor(180);
+    doc.setLineWidth(0.3);
+    doc.line(margin, y, margin + contentWidth, y);
+    y += 6;
+    doc.setFontSize(8);
+    doc.setFont("courier", "normal");
+    doc.setTextColor(120);
+    doc.text("¡Gracias por tu compra, Jefe!", pageWidth / 2, y, { align: "center" });
+    y += 4;
+    doc.text("Tel: +591 69209742", pageWidth / 2, y, { align: "center" });
+
+    doc.save(`Factura_DonPollo_${order.id.slice(0, 8)}.pdf`);
   };
 
   return (
@@ -339,7 +389,7 @@ export function ProfileModal({
                             className="mt-4 w-full bg-gray-900 hover:bg-gray-700 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm uppercase tracking-wider active:scale-[0.98] shadow-md"
                           >
                             <Download className="w-4 h-4" />
-                            Descargar / Imprimir PDF
+                            Descargar en PDF
                           </button>
                         </div>
                       )}
