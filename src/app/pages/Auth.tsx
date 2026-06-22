@@ -20,8 +20,12 @@ function FieldError({ message }: { message?: string }) {
 
 const validateName = (v: string) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(v.trim());
 const validatePassword = (v: string) =>
-  /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,}$/.test(v);
-const validatePhone = (v: string) => /^[0-9]+$/.test(v);
+  /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,128}$/.test(v);
+const validatePhone = (v: string) => /^[0-9]{8}$/.test(v);
+const validateEmail = (v: string) => {
+  const atCount = (v.match(/@/g) || []).length;
+  return atCount === 1 && /^[^@]+@[^@]+\.[^@]+$/.test(v);
+};
 
 export function Auth() {
   const [view, setView] = useState<"login" | "register">("login");
@@ -42,21 +46,25 @@ export function Auth() {
   const validateLogin = (data = loginData): LoginErrors => {
     const e: LoginErrors = {};
     if (!data.username.trim()) e.username = "El nombre es requerido";
+    else if (data.username.trim().length > 50) e.username = "El nombre no puede superar los 50 caracteres";
     else if (!validateName(data.username)) e.username = "Solo se permiten letras y espacios";
     if (!data.email.trim()) e.email = "El correo es requerido";
+    else if (!validateEmail(data.email.trim())) e.email = "Ingresa un correo válido (solo un @)";
     if (!data.password) e.password = "La contraseña es requerida";
-    else if (!validatePassword(data.password)) e.password = "Mín. 8 caracteres, 1 mayúscula, 1 número y 1 símbolo";
+    else if (!validatePassword(data.password)) e.password = "Mín. 8 y máx. 128 caracteres, 1 mayúscula, 1 número y 1 símbolo";
     return e;
   };
 
   const validateRegister = (data = registerData): RegisterErrors => {
     const e: RegisterErrors = {};
     if (!data.username.trim()) e.username = "El nombre es requerido";
+    else if (data.username.trim().length > 50) e.username = "El nombre no puede superar los 50 caracteres";
     else if (!validateName(data.username)) e.username = "Solo se permiten letras y espacios";
     if (!data.email.trim()) e.email = "El correo es requerido";
+    else if (!validateEmail(data.email.trim())) e.email = "Ingresa un correo válido (solo un @)";
     if (!data.password) e.password = "La contraseña es requerida";
-    else if (!validatePassword(data.password)) e.password = "Mín. 8 caracteres, 1 mayúscula, 1 número y 1 símbolo";
-    if (data.phone && !validatePhone(data.phone)) e.phone = "Solo se permiten números";
+    else if (!validatePassword(data.password)) e.password = "Mín. 8 y máx. 128 caracteres, 1 mayúscula, 1 número y 1 símbolo";
+    if (data.phone && !validatePhone(data.phone)) e.phone = "El teléfono debe tener exactamente 8 dígitos (Bolivia)";
     return e;
   };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Mail, Phone, Tag, Save, X, History, ChevronRight, ChevronDown, ChevronUp, Edit2, CheckCircle2, AlertCircle, XCircle } from "lucide-react";
+import { User, Mail, Phone, Tag, Save, X, History, ChevronRight, ChevronDown, ChevronUp, Edit2, CheckCircle2, AlertCircle, XCircle, Download } from "lucide-react";
 import { UserProfile, AppOrder } from "./Layout";
 
 interface ProfileModalProps {
@@ -57,6 +57,68 @@ export function ProfileModal({
   };
 
   const completedOrders = orders.filter(o => o.status === "COMPLETADO");
+
+  const generateInvoicePDF = (order: AppOrder) => {
+    const fecha = new Date(order.timestamp).toLocaleDateString("es-BO", {
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit"
+    });
+    const subtotal = (order.subtotal || order.total).toFixed(2);
+    const descuento = order.hasDiscount && order.subtotal
+      ? (order.subtotal - order.total).toFixed(2)
+      : null;
+    const html = `
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Factura Don Pollo - ${order.id.slice(0,8)}</title>
+        <style>
+          @page { size: A5; margin: 20mm; }
+          * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+          body { background: white; color: #111; font-size: 13px; }
+          .header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 12px; margin-bottom: 12px; }
+          .header h1 { font-size: 22px; font-weight: 900; letter-spacing: 2px; }
+          .header p { font-size: 11px; color: #666; margin-top: 2px; }
+          .row { display: flex; justify-content: space-between; margin: 6px 0; }
+          .label { color: #555; }
+          .value { font-weight: bold; text-align: right; max-width: 60%; word-break: break-all; }
+          .divider { border-top: 1px dashed #bbb; margin: 10px 0; }
+          .divider-solid { border-top: 2px solid #111; margin: 10px 0; }
+          .total-row { font-size: 18px; font-weight: 900; }
+          .discount { color: #dc2626; }
+          .footer { text-align: center; margin-top: 16px; font-size: 11px; color: #777; border-top: 1px dashed #ccc; padding-top: 10px; }
+          .badge { display: inline-block; background: #22c55e; color: white; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 6px; margin-bottom: 4px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="badge">COMPLETADO</div>
+          <h1>DON POLLO</h1>
+          <p>El Jefe del Sabor</p>
+          <p style="margin-top:6px; font-size:10px;">RECIBO ELECTRÓNICO</p>
+        </div>
+        <div class="row"><span class="label">Fecha:</span><span class="value">${fecha}</span></div>
+        <div class="row"><span class="label">Nro. Orden:</span><span class="value">${order.id}</span></div>
+        <div class="row"><span class="label">Entrega:</span><span class="value">${order.deliveryMethod}</span></div>
+        <div class="row"><span class="label">Pago:</span><span class="value">${order.paymentMethod}</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="label">${order.itemName}</span><span class="value">Bs ${subtotal}</span></div>
+        ${descuento ? `<div class="row discount"><span>Descuento (-${order.discountPercent}%):</span><span>- Bs ${descuento}</span></div>` : ''}
+        <div class="divider-solid"></div>
+        <div class="row total-row"><span>TOTAL:</span><span>Bs ${order.total.toFixed(2)}</span></div>
+        <div class="footer">¡Gracias por tu compra, Jefe!<br/>Tel: +591 69209742</div>
+      </body>
+      </html>
+    `;
+    const win = window.open('', '_blank', 'width=600,height=800');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+      setTimeout(() => { win.print(); }, 400);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
@@ -270,6 +332,15 @@ export function ProfileModal({
                           <div className="mt-6 text-center text-xs text-gray-400 font-medium border-t border-dashed border-gray-200 pt-4">
                             ¡Gracias por tu compra, Jefe!
                           </div>
+
+                          {/* Botón Descargar PDF */}
+                          <button
+                            onClick={() => generateInvoicePDF(order)}
+                            className="mt-4 w-full bg-gray-900 hover:bg-gray-700 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm uppercase tracking-wider active:scale-[0.98] shadow-md"
+                          >
+                            <Download className="w-4 h-4" />
+                            Descargar / Imprimir PDF
+                          </button>
                         </div>
                       )}
                     </div>

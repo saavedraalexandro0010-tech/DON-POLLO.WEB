@@ -356,7 +356,7 @@ export function Order() {
             </button>
             <span className="w-8 text-center font-black text-2xl text-gray-900">{quantity}</span>
             <button 
-              onClick={() => setQuantity(quantity + 1)}
+              onClick={() => setQuantity(Math.min(99, quantity + 1))}
               className="w-12 h-12 rounded-xl bg-white text-gray-600 font-black text-2xl shadow-sm hover:text-red-600 transition-colors flex items-center justify-center active:scale-90"
             >
               +
