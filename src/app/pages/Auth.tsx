@@ -92,8 +92,8 @@ export function Auth() {
     setIsLoading(true);
     setRegisterErrors({});
 
-    // Verificar si el nombre de usuario ya existe en la base de datos
-    const { data: existingUser } = await supabase
+    // Verificar si el nombre de usuario ya existe en la base de datos usando admin para saltar las reglas de lectura
+    const { data: existingUser } = await supabaseAdmin
       .from("profiles")
       .select("id")
       .ilike("username", registerData.username.trim())
