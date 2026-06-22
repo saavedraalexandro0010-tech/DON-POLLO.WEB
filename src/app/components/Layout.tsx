@@ -35,7 +35,7 @@ export type AppContextType = {
   user: UserProfile | null;
   login: (user: UserProfile) => void;
   logout: () => void;
-  updateUser: (user: UserProfile) => void;
+  updateUser: (user: UserProfile) => Promise<{ success: boolean; message: string }>;
   discount: number;
   applyDiscount: (code: string) => { success: boolean; message: string };
   openProfile: () => void;
@@ -308,34 +308,40 @@ export function Layout() {
 
   const registerUser = (userData: UserProfile) => setRegisteredUsers((prev) => [...prev, userData]);
 
-  const updateUser = async (userData: UserProfile) => {
+  const updateUser = async (userData: UserProfile): Promise<{ success: boolean; message: string }> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return { success: false, message: "No hay sesión activa." };
+
+    // Verificar si el nuevo nombre ya está en uso por OTRO usuario
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("username", userData.name.trim())
+      .neq("id", session.user.id)
+      .maybeSingle();
+
+    if (existing) {
+      return { success: false, message: "Este nombre ya está en uso por otro usuario. Elige otro." };
+    }
+
+    // Actualizar localmente
     updateLocalUser(userData);
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      // Actualizar tabla profiles
-      const { error: profileErr } = await supabase
-        .from("profiles")
-        .update({
-          username: userData.name,
-          phone: userData.phone
-        })
-        .eq("id", session.user.id);
-      
-      if (profileErr) {
-        console.error("Error al actualizar perfil en base de datos:", profileErr.message);
-      }
-
-      // Si cambió el correo, actualizar en auth
-      if (userData.email !== session.user.email) {
-        const { error: authErr } = await supabase.auth.updateUser({
-          email: userData.email
-        });
-        if (authErr) {
-          console.error("Error al actualizar correo en Supabase auth:", authErr.message);
-        }
-      }
+    // Actualizar tabla profiles
+    const { error: profileErr } = await supabase
+      .from("profiles")
+      .update({
+        username: userData.name.trim(),
+        phone: userData.phone
+      })
+      .eq("id", session.user.id);
+    
+    if (profileErr) {
+      console.error("Error al actualizar perfil en base de datos:", profileErr.message);
+      return { success: false, message: "Error al guardar en base de datos." };
     }
+
+    return { success: true, message: "Perfil actualizado correctamente." };
   };
 
   const applyDiscount = async (code: string) => {

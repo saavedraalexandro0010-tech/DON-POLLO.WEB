@@ -7,7 +7,7 @@ interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: UserProfile | null;
-  updateUser: (user: UserProfile) => void;
+  updateUser: (user: UserProfile) => Promise<{ success: boolean; message: string }>;
   orders: AppOrder[];
   discount: number;
   applyDiscount: (code: string) => Promise<{ success: boolean; message: string }>;
@@ -83,14 +83,20 @@ export function ProfileModal({
     setEditErrors((prev) => ({ ...prev, [field]: err }));
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     // Validar solo nombre y teléfono (el correo no es editable)
     const nameErr = validateEditField("name", editData.name || "");
     const phoneErr = validateEditField("phone", editData.phone || "");
     setEditErrors({ name: nameErr, phone: phoneErr });
     if (nameErr || phoneErr) return;
-    updateUser(editData);
+
+    // Llamar a updateUser y verificar si el nombre ya está en uso
+    const result = await updateUser(editData);
+    if (!result.success) {
+      setEditErrors((prev) => ({ ...prev, name: result.message }));
+      return;
+    }
     setIsEditingProfile(false);
   };
 
