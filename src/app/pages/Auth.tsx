@@ -93,13 +93,13 @@ export function Auth() {
     setRegisterErrors({});
 
     // Verificar si el nombre de usuario ya existe en la base de datos usando admin para saltar las reglas de lectura
-    const { data: existingUser } = await supabaseAdmin
+    const { data: existingUser, error: queryErr } = await supabaseAdmin
       .from("profiles")
       .select("id")
       .ilike("username", registerData.username.trim())
       .maybeSingle();
 
-    if (existingUser) {
+    if (existingUser || queryErr) {
       setIsLoading(false);
       setRegisterErrors({ username: "Este nombre de usuario ya está en uso. Elige otro." });
       setRegisterTouched({ username: true, email: false, phone: false, password: false });
