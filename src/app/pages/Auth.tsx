@@ -129,6 +129,16 @@ export function Auth() {
         setRegisterErrors({ password: `Error al registrarse: ${error.message}` });
       }
     } else if (data?.user) {
+      // Registrar en la tabla de perfiles inmediatamente para reservar el nombre
+      const { error: profileErr } = await supabaseAdmin.from("profiles").insert({
+        id: data.user.id,
+        username: registerData.username.trim(),
+        phone: registerData.phone || "",
+        role: "client"
+      });
+      if (profileErr) {
+        console.error("Error creating profile during registration:", profileErr);
+      }
       setShowSuccess(true);
     } else {
       setRegisterErrors({ password: "Error desconocido al crear la cuenta." });
