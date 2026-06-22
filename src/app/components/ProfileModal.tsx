@@ -29,6 +29,7 @@ export function ProfileModal({
   const [activeTab, setActiveTab] = useState<"perfil" | "historial" | "descuentos">("perfil");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editData, setEditData] = useState<UserProfile>(user || { name: "", email: "", phone: "" });
+  const [editErrors, setEditErrors] = useState<{ name?: string; email?: string; phone?: string }>({});
   const [promoCode, setPromoCode] = useState("");
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [discountFeedback, setDiscountFeedback] = useState<DiscountFeedback>(null);
@@ -42,8 +43,54 @@ export function ProfileModal({
 
   if (!isOpen || !user) return null;
 
+  const validateEditField = (field: "name" | "email" | "phone", value: string): string => {
+    if (field === "name") {
+      if (!value.trim()) return "El nombre es requerido.";
+      if (!/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/.test(value)) return "El nombre solo puede contener letras y espacios.";
+      if (value.length > 50) return "El nombre no puede superar los 50 caracteres.";
+    }
+    if (field === "email") {
+      if (!value.trim()) return "El correo es requerido.";
+      const atCount = (value.match(/@/g) || []).length;
+      if (atCount !== 1) return "El correo debe contener exactamente un '@'.";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Ingresa un correo electrónico válido.";
+    }
+    if (field === "phone") {
+      if (value && !/^\d+$/.test(value)) return "El teléfono solo puede contener números.";
+      if (value && value.length !== 8) return "El teléfono debe tener exactamente 8 dígitos.";
+    }
+    return "";
+  };
+
+  const handleEditChange = (field: "name" | "email" | "phone", value: string) => {
+    // Filtrado en tiempo real
+    let filtered = value;
+    if (field === "name") {
+      filtered = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, "").slice(0, 50);
+    }
+    if (field === "phone") {
+      filtered = value.replace(/\D/g, "").slice(0, 8);
+    }
+    if (field === "email") {
+      // Evitar más de un '@'
+      const atIdx = value.indexOf("@");
+      if (atIdx !== -1) {
+        filtered = value.slice(0, atIdx + 1) + value.slice(atIdx + 1).replace(/@/g, "");
+      }
+    }
+    setEditData({ ...editData, [field]: filtered });
+    const err = validateEditField(field, filtered);
+    setEditErrors((prev) => ({ ...prev, [field]: err }));
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    // Validar todos los campos antes de guardar
+    const nameErr = validateEditField("name", editData.name || "");
+    const emailErr = validateEditField("email", editData.email || "");
+    const phoneErr = validateEditField("phone", editData.phone || "");
+    setEditErrors({ name: nameErr, email: emailErr, phone: phoneErr });
+    if (nameErr || emailErr || phoneErr) return;
     updateUser(editData);
     setIsEditingProfile(false);
   };
@@ -257,25 +304,74 @@ export function ProfileModal({
                 </div>
               ) : (
                 <form onSubmit={handleSave} className="flex flex-col gap-5 animate-in slide-in-from-right-4 duration-300">
-                  {[
-                    { label: "Nombre completo", icon: <User className="h-5 w-5 text-gray-400" />, field: "name" as const, type: "text" },
-                    { label: "Correo electrónico", icon: <Mail className="h-5 w-5 text-gray-400" />, field: "email" as const, type: "email" },
-                    { label: "Teléfono", icon: <Phone className="h-5 w-5 text-gray-400" />, field: "phone" as const, type: "tel" },
-                  ].map(({ label, icon, field, type }) => (
-                    <div key={field}>
-                      <label className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2 block">{label}</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">{icon}</div>
-                        <input
-                          type={type}
-                          required={field !== "phone"}
-                          value={editData[field] || ""}
-                          onChange={(e) => setEditData({ ...editData, [field]: e.target.value })}
-                          className="w-full bg-white border border-gray-200 text-gray-900 rounded-2xl pl-11 pr-4 py-3.5 focus:ring-2 focus:ring-[#E60000] focus:border-transparent outline-none transition-all font-medium shadow-sm text-sm"
-                        />
+
+                  {/* Nombre */}
+                  <div>
+                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2 block">Nombre completo</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <User className="h-5 w-5 text-gray-400" />
                       </div>
+                      <input
+                        type="text"
+                        autoComplete="off"
+                        value={editData.name || ""}
+                        onChange={(e) => handleEditChange("name", e.target.value)}
+                        className={`w-full bg-white border text-gray-900 rounded-2xl pl-11 pr-4 py-3.5 focus:ring-2 focus:ring-[#E60000] focus:border-transparent outline-none transition-all font-medium shadow-sm text-sm ${
+                          editErrors.name ? "border-red-400" : "border-gray-200"
+                        }`}
+                      />
                     </div>
-                  ))}
+                    {editErrors.name && (
+                      <p className="text-xs text-red-500 font-semibold mt-1.5 pl-1">{editErrors.name}</p>
+                    )}
+                  </div>
+
+                  {/* Correo */}
+                  <div>
+                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2 block">Correo electrónico</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <Mail className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        autoComplete="off"
+                        value={editData.email || ""}
+                        onChange={(e) => handleEditChange("email", e.target.value)}
+                        className={`w-full bg-white border text-gray-900 rounded-2xl pl-11 pr-4 py-3.5 focus:ring-2 focus:ring-[#E60000] focus:border-transparent outline-none transition-all font-medium shadow-sm text-sm ${
+                          editErrors.email ? "border-red-400" : "border-gray-200"
+                        }`}
+                      />
+                    </div>
+                    {editErrors.email && (
+                      <p className="text-xs text-red-500 font-semibold mt-1.5 pl-1">{editErrors.email}</p>
+                    )}
+                  </div>
+
+                  {/* Teléfono */}
+                  <div>
+                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2 block">Teléfono</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <Phone className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        value={editData.phone || ""}
+                        onChange={(e) => handleEditChange("phone", e.target.value)}
+                        placeholder="8 dígitos"
+                        className={`w-full bg-white border text-gray-900 rounded-2xl pl-11 pr-4 py-3.5 focus:ring-2 focus:ring-[#E60000] focus:border-transparent outline-none transition-all font-medium shadow-sm text-sm ${
+                          editErrors.phone ? "border-red-400" : "border-gray-200"
+                        }`}
+                      />
+                    </div>
+                    {editErrors.phone && (
+                      <p className="text-xs text-red-500 font-semibold mt-1.5 pl-1">{editErrors.phone}</p>
+                    )}
+                  </div>
 
                   <div className="flex flex-col gap-3 mt-2">
                     <button
@@ -287,7 +383,7 @@ export function ProfileModal({
                     </button>
                     <button
                       type="button"
-                      onClick={() => setIsEditingProfile(false)}
+                      onClick={() => { setIsEditingProfile(false); setEditErrors({}); }}
                       className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-4 rounded-2xl flex items-center justify-center transition-colors"
                     >
                       CANCELAR
