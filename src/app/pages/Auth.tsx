@@ -234,13 +234,23 @@ export function Auth() {
               {/* Toggle */}
               <div className="flex bg-gray-100 p-1.5 rounded-2xl mb-6">
                 <button
-                  onClick={() => { setView("login"); setLoginErrors({}); setLoginTouched({}); }}
+                  onClick={() => { 
+                    setView("login"); 
+                    setLoginErrors({}); 
+                    setLoginTouched({}); 
+                    setRegisterData({ username: "", email: "", phone: "", password: "" });
+                  }}
                   className={`flex-1 py-3 px-4 rounded-xl font-black text-sm transition-all duration-300 ${view === "login" ? "bg-white text-[#E60000] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
                 >
                   INICIAR SESIÓN
                 </button>
                 <button
-                  onClick={() => { setView("register"); setRegisterErrors({}); setRegisterTouched({}); }}
+                  onClick={() => { 
+                    setView("register"); 
+                    setRegisterErrors({}); 
+                    setRegisterTouched({}); 
+                    setLoginData({ username: "", email: "", password: "" });
+                  }}
                   className={`flex-1 py-3 px-4 rounded-xl font-black text-sm transition-all duration-300 ${view === "register" ? "bg-white text-[#E60000] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
                 >
                   REGISTRARSE
