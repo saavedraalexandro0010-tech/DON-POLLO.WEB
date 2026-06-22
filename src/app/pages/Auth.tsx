@@ -259,7 +259,7 @@ export function Auth() {
 
               {/* Login */}
               {view === "login" ? (
-                <form onSubmit={handleLogin} className="flex flex-col gap-3 animate-in fade-in slide-in-from-left-4 duration-300">
+                <form onSubmit={handleLogin} autoComplete="off" className="flex flex-col gap-3 animate-in fade-in slide-in-from-left-4 duration-300">
 
                   {loginErrors.general && (
                     <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-[#E60000] px-4 py-3 rounded-2xl animate-in fade-in zoom-in duration-200">
@@ -275,6 +275,7 @@ export function Auth() {
                       </div>
                       <input
                         type="text"
+                        autoComplete="off"
                         value={loginData.username}
                         onChange={(e) => {
                           setLoginData({ ...loginData, username: e.target.value });
@@ -295,6 +296,7 @@ export function Auth() {
                       </div>
                       <input
                         type="email"
+                        autoComplete="off"
                         value={loginData.email}
                         onChange={(e) => {
                           setLoginData({ ...loginData, email: e.target.value });
@@ -315,6 +317,7 @@ export function Auth() {
                       </div>
                       <input
                         type={showLoginPw ? "text" : "password"}
+                        autoComplete="new-password"
                         value={loginData.password}
                         onChange={(e) => {
                           setLoginData({ ...loginData, password: e.target.value });
@@ -346,7 +349,7 @@ export function Auth() {
                   </button>
                 </form>
               ) : (
-                <form onSubmit={handleRegister} className="flex flex-col gap-3 animate-in fade-in slide-in-from-right-4 duration-300">
+                <form onSubmit={handleRegister} autoComplete="off" className="flex flex-col gap-3 animate-in fade-in slide-in-from-right-4 duration-300">
 
                   <div>
                     <div className="relative">
@@ -355,6 +358,7 @@ export function Auth() {
                       </div>
                       <input
                         type="text"
+                        autoComplete="off"
                         value={registerData.username}
                         onChange={(e) => {
                           setRegisterData({ ...registerData, username: e.target.value });
@@ -375,6 +379,7 @@ export function Auth() {
                       </div>
                       <input
                         type="email"
+                        autoComplete="off"
                         value={registerData.email}
                         onChange={(e) => {
                           setRegisterData({ ...registerData, email: e.target.value });
@@ -395,6 +400,7 @@ export function Auth() {
                       </div>
                       <input
                         type={showRegisterPw ? "text" : "password"}
+                        autoComplete="new-password"
                         value={registerData.password}
                         onChange={(e) => {
                           setRegisterData({ ...registerData, password: e.target.value });
@@ -423,6 +429,7 @@ export function Auth() {
                       </div>
                       <input
                         type="tel"
+                        autoComplete="off"
                         value={registerData.phone}
                         onChange={(e) => {
                           setRegisterData({ ...registerData, phone: e.target.value });
